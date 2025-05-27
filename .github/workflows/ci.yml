@@ -7,12 +7,41 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+
+    # 1) Start a Postgres service for testing
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: shortener_db
+          POSTGRES_USER: shortener_user
+          POSTGRES_PASSWORD: shortener_pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    # 2) Provide Django with the correct DB credentials
+    env:
+      DB_NAME: shortener_db
+      DB_USER: shortener_user
+      DB_PASSWORD: shortener_pass
+      DB_HOST: localhost
+      DB_PORT: 5432
+
+    # 3) Steps to check out code, install deps, and run tests
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
+
       - name: Install dependencies & run tests
         run: |
           python -m venv .venv
@@ -24,8 +53,10 @@ jobs:
   publish-image:
     needs: tests
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Build Docker image
         run: docker build -t url-shortener .
@@ -37,7 +68,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Push to GHCR
+      - name: Tag & Push image
         run: |
           docker tag url-shortener \
             ghcr.io/${{ github.repository_owner }}/url-shortener:latest
