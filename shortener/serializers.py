@@ -6,4 +6,3 @@ class ShortURLSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShortURL
         fields = '__all__'
-        
