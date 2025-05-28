@@ -26,8 +26,7 @@ SECRET_KEY = 'django-insecure-83trwp)bsm)n14rv+3+5r6jgi-%lvb#&yt%7w!zt1^vq&5gtii
 DEBUG = False
 
 # Read a comma-sep list from ENV (defaults to allowing all *.run.app)
-hosts = os.environ.get("ALLOWED_HOSTS", ".run.app")
-ALLOWED_HOSTS = [h.strip() for h in hosts.split(",") if h.strip()]
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 

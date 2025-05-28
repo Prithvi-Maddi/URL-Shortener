@@ -1,24 +1,30 @@
+# Dockerfile
+
+# 1. Base image
 FROM python:3.11-slim
 
+# 2. Set workdir
 WORKDIR /app
 
-# 1) OS deps for Postgres & tooling
+# 3. Install system dependencies
 RUN apt-get update \
  && apt-get install -y build-essential libpq-dev curl \
  && rm -rf /var/lib/apt/lists/*
 
-# 2) Install Python deps
+# 4. Copy and install Python deps
 COPY requirements.txt .
 RUN pip install --upgrade pip \
  && pip install -r requirements.txt
 
-# 3) Copy code & our entrypoint script
+# 5. Copy application code
 COPY . .
+
+# 6. Copy and make entrypoint executable
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-# 4) Tell Cloud Run what port we’ll listen on
-ENV PORT=8000
+# 7. Expose port for documentation (doesn't affect Cloud Run)
+EXPOSE 8000
 
-# 5) Use our entrypoint (runs migrate, then Gunicorn)
+# 8. Use the entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]

@@ -1,14 +1,14 @@
 #!/bin/sh
 set -e
 
-# Run migrations
-python manage.py migrate --noinput
+# Default to 8000 if PORT isn't set (Cloud Run will inject PORT=8080 or 8000)
+PORT="${PORT:-8000}"
 
-# Port is already in $PORT thanks to ENV in Dockerfile
-: "${PORT:=8000}"
+# Run Django migrations 
+echo "Running migrations…"
+python manage.py migrate --no-input
 
-# Start Gunicorn (bind to 0.0.0.0 so Cloud Run health checks work)
+# Launch Gunicorn
 exec gunicorn url_shortener.wsgi:application \
-     --bind 0.0.0.0:"$PORT" \
-     --workers 2 \
-     --timeout 300
+     --bind "0.0.0.0:${PORT}" \
+     --workers 2
