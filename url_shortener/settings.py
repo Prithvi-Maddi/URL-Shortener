@@ -23,11 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-83trwp)bsm)n14rv+3+5r6jgi-%lvb#&yt%7w!zt1^vq&5gtii'
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-raw_hosts = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost")
-ALLOWED_HOSTS = [h.strip() for h in raw_hosts.split(",") if h.strip()]
+# Read a comma-sep list from ENV (defaults to allowing all *.run.app)
+hosts = os.environ.get("ALLOWED_HOSTS", ".run.app")
+ALLOWED_HOSTS = [h.strip() for h in hosts.split(",") if h.strip()]
 
 # Application definition
 
