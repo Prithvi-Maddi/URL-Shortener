@@ -15,20 +15,21 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.http import JsonResponse
 from django.urls import path, include
+from django.http import JsonResponse
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('shortener.urls')),
-]
+# simple health-check
 def health(request):
     return JsonResponse({"status": "ok"})
 
 urlpatterns = [
-    # health‐check must come first
-    path("health/", health),
-    # your existing API
-    path("shorten", include("shortener.urls")),  # or ShortenURLView.as_view()
-    # etc...
+    # 1) health-check
+    path("health/", health, name="health"),
+
+    # 2) admin if you need it
+    path("admin/", admin.site.urls),
+
+    # 3) everything else comes from shortener.urls
+    path("", include("shortener.urls")),
 ]
+
