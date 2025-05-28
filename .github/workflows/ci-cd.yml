@@ -1,42 +1,36 @@
-name: CI/CD
+# .github/workflows/ci-cd.yml
+name: CI / CD
 
 on:
   push:
-    branches: [main]
-  pull_request:
+    branches:
+      - main
 
 env:
-  GCP_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
   IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID }}/url-shortener:latest
 
 jobs:
   build-and-test:
+    name: 🧪 Build & Test
     runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:15
+        ports:
+          - 5432:5432
         env:
           POSTGRES_DB: shortener_db
           POSTGRES_USER: shortener_user
-          POSTGRES_PASSWORD: secretpw
-        ports:
-          - 5432:5432
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    # 2) Point Django at Postgres container (Created above)
-    env:
-      DB_HOST: localhost
-      DB_PORT: 5432
-      DB_NAME: shortener_db
-      DB_USER: shortener_user
-      DB_PASSWORD: secretpw
+          --health-cmd="pg_isready -U shortener_user" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -53,40 +47,64 @@ jobs:
           pip install flake8
           flake8 .
 
-      - name: Run tests
+      - name: Run migrations & tests
+        env:
+          DB_NAME: shortener_db
+          DB_USER: shortener_user
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: localhost
+          DB_PORT: 5432
         run: |
+          python manage.py migrate
           python manage.py test
 
   build-and-push:
+    name: 📦 Build & Push Docker Image
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Configure gcloud
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Build & push Docker image
+      - name: Build and push to GCR
         run: |
           docker build --platform linux/amd64 -t $IMAGE .
           docker push $IMAGE
 
   deploy:
+    name: 🚀 Deploy to Cloud Run
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to Cloud Run
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure gcloud
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Deploy service
         run: |
           gcloud run deploy url-shortener-service \
             --image $IMAGE \
-            --region us-central1 \
             --platform managed \
+            --region us-central1 \
             --allow-unauthenticated \
-            --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
-            --set-env-vars=DB_HOST=/cloudsql/${{ secrets.CLOUD_SQL_CONNECTION_NAME }},DB_NAME=shortener_db,DB_USER=shortener_user,ALLOWED_HOSTS='.run.app' \
+            --add-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
+            --set-env-vars=DB_HOST=/cloudsql/${{ secrets.CLOUD_SQL_CONNECTION_NAME }},DB_NAME=shortener_db,DB_USER=shortener_user,ALLOWED_HOSTS=".run.app" \
             --set-secrets=DB_PASSWORD=db-password:latest \
             --timeout=300s \
             --concurrency=80
