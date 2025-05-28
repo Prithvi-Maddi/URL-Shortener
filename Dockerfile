@@ -1,38 +1,21 @@
-# Use the official Python image
 FROM python:3.11-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Set working directory inside the container
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy dependency list
-COPY requirements.txt .
-
-# Install Python dependencies
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
-
-# Copy the rest of the code
-COPY . .
-
-
 RUN apt-get update \
- && apt-get install -y curl \
+ && apt-get install -y build-essential libpq-dev curl \
  && rm -rf /var/lib/apt/lists/*
 
-COPY entrypoint.sh /app/entrypoint.sh
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+ && pip install -r requirements.txt
+
+COPY . .
+
+# default PORT for Cloud Run
+ENV PORT 8000
+
 RUN chmod +x /app/entrypoint.sh
+
+EXPOSE 8000
 ENTRYPOINT ["/app/entrypoint.sh"]
-
-# This will become the "$@" in entrypoint.sh
-CMD ["python3","manage.py","runserver","0.0.0.0:8000"]
-
