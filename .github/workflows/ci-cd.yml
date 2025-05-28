@@ -6,8 +6,8 @@ on:
   pull_request:
 
 env:
-  GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
-  IMAGE: gcr.io/${{ secrets.GCP_PROJECT }}/url-shortener:latest
+  GCP_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
+  IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID }}/url-shortener:latest
 
 jobs:
   build-and-test:
@@ -66,7 +66,7 @@ jobs:
       - name: Configure gcloud
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: ${{ secrets.GCP_PROJECT }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
 
       - name: Build & push Docker image
@@ -85,8 +85,8 @@ jobs:
             --region us-central1 \
             --platform managed \
             --allow-unauthenticated \
-            --add-cloudsql-instances ${{ secrets.INSTANCE_CONN }} \
-            --set-env-vars=DB_HOST=/cloudsql/${{ secrets.INSTANCE_CONN }},DB_NAME=shortener_db,DB_USER=shortener_user,ALLOWED_HOSTS='.run.app' \
+            --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
+            --set-env-vars=DB_HOST=/cloudsql/${{ secrets.CLOUD_SQL_CONNECTION_NAME }},DB_NAME=shortener_db,DB_USER=shortener_user,ALLOWED_HOSTS='.run.app' \
             --set-secrets=DB_PASSWORD=db-password:latest \
             --timeout=300s \
             --concurrency=80
