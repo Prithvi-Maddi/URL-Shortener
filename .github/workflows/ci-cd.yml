@@ -12,6 +12,29 @@ env:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: shortener_db
+          POSTGRES_USER: shortener_user
+          POSTGRES_PASSWORD: secretpw
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    # 2) Point Django at Postgres container (Created above)
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: shortener_db
+      DB_USER: shortener_user
+      DB_PASSWORD: secretpw
+
     steps:
       - uses: actions/checkout@v3
 
