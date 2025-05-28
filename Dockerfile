@@ -29,14 +29,10 @@ RUN apt-get update \
  && apt-get install -y curl \
  && rm -rf /var/lib/apt/lists/*
 
-# Run Django server on container start
-CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
-
-# Copy the entrypoint script into the image
 COPY entrypoint.sh /app/entrypoint.sh
-
-# Make sure it’s executable
 RUN chmod +x /app/entrypoint.sh
-
-# Tell Docker to use it as the container’s entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]
+
+# This will become the "$@" in entrypoint.sh
+CMD ["python3","manage.py","runserver","0.0.0.0:8000"]
+

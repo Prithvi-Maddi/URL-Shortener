@@ -27,8 +27,8 @@ SECRET_KEY = 'django-insecure-83trwp)bsm)n14rv+3+5r6jgi-%lvb#&yt%7w!zt1^vq&5gtii
 DEBUG = False
 
 #Note to self: This is to avoid hardcoding and j reads from env variable
-allowed = os.environ.get('ALLOWED_HOSTS', '.run.app')
-ALLOWED_HOSTS = [host.strip() for host in allowed.split(',') if host.strip()]
+raw_hosts = os.environ.get("ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = raw_hosts.split(",") if raw_hosts else []
 
 
 # Application definition
