@@ -18,9 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
 
+
 # simple health-check
 def health(request):
     return JsonResponse({"status": "ok"})
+
 
 urlpatterns = [
     # 1) health-check
@@ -32,4 +34,3 @@ urlpatterns = [
     # 3) everything else comes from shortener.urls
     path("", include("shortener.urls")),
 ]
-

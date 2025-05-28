@@ -1,5 +1,7 @@
-import string, random
+import string
+import random
 from .models import ShortURL
+
 
 def generate_unique_short_code(length=6):
     chars = string.ascii_letters + string.digits  # a-z, A-Z, 0-9

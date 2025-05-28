@@ -18,7 +18,8 @@ class ShortCodeGenerationTests(TestCase):
 
 class ShortenEndpointTests(APITestCase):
     def test_valid_url_shortening(self):
-        response = self.client.post('/shorten', {'original_url': 'https://example.com'}, format='json')
+        response = self.client.post('/shorten', 
+        {'original_url': 'https://example.com'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn('short_code', response.data)
         self.assertIn('short_url', response.data)
@@ -29,9 +30,10 @@ class ShortenEndpointTests(APITestCase):
         self.assertIn('error', response.data)
 
     def test_malformed_url(self):
-        response = self.client.post('/shorten', {'original_url': 'badurl'}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)  # Note: URLField won't reject by default
-        # Optional: add manual URL validation if you want to reject malformed ones
+        response = self.client.post('/shorten', 
+        {'original_url': 'badurl'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)  
+        # Note: URLField won't reject by default
 
 
 class RedirectTests(APITestCase):
